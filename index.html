@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIB任务消除机</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --task: #f43f5e;
+            --schedule: #3b82f6;
+            --calendar: #10b981;
+            --diary: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --transition: all 0.3s ease;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f0f4f8;
+            background-image: 
+                radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--dark);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        /* 时间线样式 */
+        .time-line-container {
+            margin: 30px 0 50px;
+            position: relative;
+            padding: 0 20px;
+        }
+
+        .time-line {
+            height: 6px;
+            background: linear-gradient(90deg, 
+                #e2e8f0 0%, #e2e8f0 79.3%,
+                var(--primary) 79.3%, var(--primary) 100%);
+            border-radius: 3px;
+            position: relative;
+        }
+
+        .time-markers {
+            display: flex;
+            justify-content: space-between;
+            position: absolute;
+            width: 100%;
+            top: -25px;
+            left: 0;
+        }
+
+        .time-marker {
+            font-size: 0.85rem;
+            color: var(--gray);
+            position: relative;
+            transform: translateX(-50%);
+        }
+
+        .time-marker::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--border);
+            border-radius: 50%;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.3s ease;
+        }
+
+        .time-marker.major::after {
+            width: 14px;
+            height: 14px;
+            background-color: var(--primary-light);
+        }
+
+        .time-marker.active::after {
+            background-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .current-time-indicator {
+            position: absolute;
+            top: -45px;
+            background-color: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+            z-index: 3;
+            left: 79.3%;
+        }
+
+        .current-time-indicator::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px 8px 0;
+            border-style: solid;
+            border-color: var(--primary) transparent transparent;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--dark);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+        }
+
+        .feature-card.task::before {
+            background-color: var(--task);
+        }
+
+        .feature-card.schedule::before {
+            background-color: var(--schedule);
+        }
+
+        .feature-card.calendar::before {
+            background-color: var(--calendar);
+        }
+
+        .feature-card.diary::before {
+            background-color: var(--diary);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .feature-card.task .feature-icon {
+            color: var(--task);
+        }
+
+        .feature-card.schedule .feature-icon {
+            color: var(--schedule);
+        }
+
+        .feature-card.calendar .feature-icon {
+            color: var(--calendar);
+        }
+
+        .feature-card.diary .feature-icon {
+            color: var(--diary);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .feature-desc {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-marker {
+                font-size: 0.7rem;
+            }
+            
+            .time-marker:not(.major) {
+                display: none; /* 在小屏幕上只显示主要时间点 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FIB任务消除机</h1>
+            <p class="subtitle">高效管理你的任务、时间和心情</p>
+            
+            <!-- 时间线（已删除小人） -->
+            <div class="time-line-container">
+                <div class="time-markers">
+                    <div class="time-marker major" data-hour="0">0:00</div>
+                    <div class="time-marker" data-hour="1"></div>
+                    <div class="time-marker" data-hour="2"></div>
+                    <div class="time-marker" data-hour="3">3:00</div>
+                    <div class="time-marker" data-hour="4"></div>
+                    <div class="time-marker" data-hour="5"></div>
+                    <div class="time-marker major" data-hour="6">6:00</div>
+                    <div class="time-marker" data-hour="7"></div>
+                    <div class="time-marker" data-hour="8"></div>
+                    <div class="time-marker" data-hour="9">9:00</div>
+                    <div class="time-marker" data-hour="10"></div>
+                    <div class="time-marker" data-hour="11"></div>
+                    <div class="time-marker major" data-hour="12">12:00</div>
+                    <div class="time-marker" data-hour="13"></div>
+                    <div class="time-marker" data-hour="14"></div>
+                    <div class="time-marker" data-hour="15">15:00</div>
+                    <div class="time-marker" data-hour="16"></div>
+                    <div class="time-marker" data-hour="17"></div>
+                    <div class="time-marker major" data-hour="18">18:00</div>
+                    <div class="time-marker" data-hour="19">19:00</div>
+                    <div class="time-marker" data-hour="20"></div>
+                    <div class="time-marker" data-hour="21">21:00</div>
+                    <div class="time-marker" data-hour="22"></div>
+                    <div class="time-marker" data-hour="23"></div>
+                    <div class="time-marker major" data-hour="24">24:00</div>
+                </div>
+                <div class="time-line"></div>
+                <div class="current-time-indicator">19:14</div>
+            </div>
+        </header>
+
+        <div class="features">
+            <a href="task-management.html" class="feature-card task">
+                <div class="feature-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h2 class="feature-title">任务管理</h2>
+                
+            </a>
+            
+            <a href="daily-schedule.html" class="feature-card schedule">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h2 class="feature-title">当日时间表</h2>
+               
+            </a>
+            
+            <a href="task-calendar.html" class="feature-card calendar">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h2 class="feature-title">任务日历</h2>
+                
+            </a>
+            
+            <a href="mood-diary.html" class="feature-card diary">
+                <div class="feature-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h2 class="feature-title">心情日记</h2>
+                
+            </a>
+        </div>
+
+        <footer>
+            <p>FIB消除机 &copy; <span id="currentYear"></span> - 让生活没烦恼</p>
+        </footer>
+    </div>
+
+    <script>
+        // 更新当前年份
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // 激活19点的标记
+        document.querySelector('.time-marker[data-hour="19"]').classList.add('active');
+    </script>
+</body>
+</html>
