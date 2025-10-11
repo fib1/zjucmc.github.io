@@ -396,7 +396,7 @@
                 scheduleRows.appendChild(scheduleRow);
             }
             
-            // 获取当天任务
+            // 获取当天任务 - 修复日期比较逻辑
             const targetDate = new Date(currentScheduleDate);
             targetDate.setHours(0, 0, 0, 0);
             const targetDateStr = targetDate.toISOString().split('T')[0];
@@ -409,8 +409,9 @@
                 const taskDueDate = new Date(task.dueDateTime);
                 const taskDueDateStr = taskDueDate.toISOString().split('T')[0];
                 
-                // 任务在当天进行中
-                return taskStartDateStr <= targetDateStr && taskDueDateStr >= targetDateStr;
+                // 修复：任务在当天进行中 - 使用正确的日期比较
+                return taskStartDateStr === targetDateStr || 
+                       (taskStartDateStr <= targetDateStr && taskDueDateStr >= targetDateStr);
             });
             
             // 如果没有任务
@@ -502,4 +503,5 @@
     </script>
 </body>
 </html>
+
     
