@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心情日记</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --secondary: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f0f4f8;
+            background-image: 
+                radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
+                radial-gradient(at 0% 50%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 25px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 {
+            color: var(--dark);
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .mood-diary-section {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .mood-diary-section:hover {
+            box-shadow: var(--shadow);
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        h2 i {
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label i {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        button {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+            background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+        }
+
+        .mood-selector {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0 30px 0;
+        }
+
+        .mood-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 15px;
+            border-radius: 10px;
+            width: 90px;
+            position: relative;
+        }
+
+        .mood-option.selected {
+            background-color: #f5f3ff;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .mood-option.selected::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+        }
+
+        .mood-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .mood-option:hover .mood-icon {
+            transform: scale(1.2);
+        }
+
+        .mood-label {
+            font-size: 0.9rem;
+            color: var(--dark);
+            font-weight: 500;
+        }
+
+        #moodDiaryText {
+            width: 100%;
+            min-height: 160px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+
+        .completion-rate {
+            margin: 20px 0 30px 0;
+        }
+
+        .completion-slider {
+            width: 100%;
+            margin: 10px 0;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e2e8f0;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .completion-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .completion-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: var(--primary-light);
+        }
+
+        .completion-display {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .diary-entries {
+            margin-top: 40px;
+        }
+
+        .entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            color: var(--dark);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h3 i {
+            color: var(--primary);
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .sort-btn {
+            background: #f1f5f9;
+            color: var(--dark);
+            box-shadow: none;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .sort-btn:hover {
+            background: #e2e8f0;
+            transform: none;
+        }
+
+        .sort-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .diary-entry {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--primary);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .diary-entry:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .diary-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .diary-btn {
+            background: none;
+            color: var(--gray);
+            padding: 4px;
+            box-shadow: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .diary-btn:hover {
+            color: var(--primary);
+            transform: none;
+            box-shadow: none;
+            background: none;
+        }
+
+        .diary-btn.delete:hover {
+            color: var(--danger);
+        }
+
+        .diary-date {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+        }
+
+        .diary-mood {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .diary-content {
+            color: var(--dark);
+            line-height: 1.7;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .diary-completion {
+            font-size: 0.9rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .completion-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .completion-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            border-left: 4px solid var(--primary);
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notification-title i {
+            color: var(--primary);
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .notification-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .mood-selector {
+                gap: 10px;
+            }
+            
+            .mood-option {
+                width: 70px;
+                padding: 10px;
+            }
+            
+            .mood-icon {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <i class="fas fa-book-open" style="font-size: 1.8rem; color: var(--primary);"></i>
+                <h1>心情日记</h1>
+            </div>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> 返回主页
+            </a>
+        </header>
+
+        <section class="mood-diary-section">
+            <h2><i class="fas fa-pen-to-square"></i> 记录今日心情</h2>
+            <form id="moodDiaryForm">
+                <div class="form-group">
+                    <label for="diaryDate"><i class="fas fa-calendar-day"></i> 记录日期</label>
+                    <input type="date" id="diaryDate" required>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-heart"></i> 今日心情</label>
+                    <div class="mood-selector">
+                        <div class="mood-option" data-mood="excited">
+                            <div class="mood-icon"><i class="fas fa-grin-hearts" style="color: #ec4899;"></i></div>
+                            <div class="mood-label">兴奋</div>
+                        </div>
+                        <div class="mood-option" data-mood="happy">
+                            <div class="mood-icon"><i class="fas fa-laugh-beam" style="color: #f59e0b;"></i></div>
+                            <div class="mood-label">开心</div>
+                        </div>
+                        <div class="mood-option" data-mood="satisfied">
+                            <div class="mood-icon"><i class="fas fa-smile" style="color: #10b981;"></i></div>
+                            <div class="mood-label">满意</div>
+                        </div>
+                        <div class="mood-option" data-mood="calm">
+                            <div class="mood-icon"><i class="fas fa-meh-blank" style="color: #3b82f6;"></i></div>
+                            <div class="mood-label">平静</div>
+                        </div>
+                        <div class="mood-option" data-mood="tired">
+                            <div class="mood-icon"><i class="fas fa-tired" style="color: #64748b;"></i></div>
+                            <div class="mood-label">疲惫</div>
+                        </div>
+                        <div class="mood-option" data-mood="sad">
+                            <div class="mood-icon"><i class="fas fa-sad-tear" style="color: #6366f1;"></i></div>
+                            <div class="mood-label">难过</div>
+                        </div>
+                        <div class="mood-option" data-mood="anxious">
+                            <div class="mood-icon"><i class="fas fa-flushed" style="color: #f43f5e;"></i></div>
+                            <div class="mood-label">焦虑</div>
+                        </div>
+                        <div class="mood-option" data-mood="relaxed">
+                            <div class="mood-icon"><i class="fas fa-pagelines" style="color: #10b981;"></i></div>
+                            <div class="mood-label">放松</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="selectedMood" value="">
+                </div>
+                
+                <div class="form-group completion-rate">
+                    <label><i class="fas fa-tasks"></i> 任务完成度</label>
+                    <input type="range" min="0" max="100" value="0" class="completion-slider" id="completionRate">
+                    <div class="completion-display">
+                        <span id="completionValue">0%</span> 完成
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="moodDiaryText"><i class="fas fa-align-left"></i> 今日记录</label>
+                    <textarea id="moodDiaryText" placeholder="记录一下今天的感受、收获和待改进的地方..."></textarea>
+                </div>
+                
+                <button type="submit"><i class="fas fa-save"></i> 保存日记</button>
+            </form>
+            
+            <div class="diary-entries">
+                <div class="entries-header">
+                    <h3><i class="fas fa-history"></i> 历史记录</h3>
+                    <div class="sort-options">
+                        <button class="sort-btn active" data-sort="newest">最新</button>
+                        <button class="sort-btn" data-sort="oldest">最早</button>
+                    </div>
+                </div>
+                <div id="diaryEntries">
+                    <!-- 日记条目将动态生成 -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 通知组件 -->
+    <div class="notification" id="notification">
+        <button class="notification-close" id="notificationClose"><i class="fas fa-times"></i></button>
+        <div class="notification-title" id="notificationTitle"><i class="fas fa-info-circle"></i> 提示</div>
+        <div class="notification-message" id="notificationMessage"></div>
+    </div>
+
+    <script>
+        // 日记数据
+        let diaries = JSON.parse(localStorage.getItem('diaries')) || [];
+        let sortOrder = 'newest'; // 默认按最新排序
+
+        // DOM元素
+        const moodDiaryForm = document.getElementById('moodDiaryForm');
+        const moodOptions = document.querySelectorAll('.mood-option');
+        const selectedMoodInput = document.getElementById('selectedMood');
+        const completionRateInput = document.getElementById('completionRate');
+        const completionValue = document.getElementById('completionValue');
+        const diaryDateInput = document.getElementById('diaryDate');
+        const diaryEntries = document.getElementById('diaryEntries');
+        const sortButtons = document.querySelectorAll('.sort-btn');
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const notificationClose = document.getElementById('notificationClose');
+
+        // 初始化心情选择器
+        moodOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                moodOptions.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedMoodInput.value = option.getAttribute('data-mood');
+            });
+        });
+
+        // 完成度滑块事件
+        completionRateInput.addEventListener('input', () => {
+            completionValue.textContent = `${completionRateInput.value}%`;
+        });
+
+        // 心情日记表单提交
+        moodDiaryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('diaryDate').value;
+            const mood = document.getElementById('selectedMood').value;
+            const completion = document.getElementById('completionRate').value;
+            const content = document.getElementById('moodDiaryText').value;
+            
+            if (!date) {
+                showNotification('错误', '请选择日期');
+                return;
+            }
+            
+            if (!mood) {
+                showNotification('错误', '请选择心情');
+                return;
+            }
+            
+            // 检查是否已有该日期的日记
+            const existingIndex = diaries.findIndex(d => d.date === date);
+            
+            const diaryEntry = {
+                id: existingIndex >= 0 ? diaries[existingIndex].id : Date.now(),
+                date: date,
+                mood: mood,
+                completion: completion,
+                content: content
+            };
+            
+            // 更新或添加日记
+            if (existingIndex >= 0) {
+                diaries[existingIndex] = diaryEntry;
+            } else {
+                diaries.push(diaryEntry);
+            }
+            
+            saveDiaries();
+            renderDiaryEntries();
+            
+            // 重置表单
+            moodDiaryForm.reset();
+            completionValue.textContent = '0%';
+            moodOptions.forEach(opt => opt.classList.remove('selected'));
+            selectedMoodInput.value = '';
+            
+            showNotification('成功', '日记已保存');
+        });
+
+        // 排序按钮事件
+        sortButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                sortButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                sortOrder = button.getAttribute('data-sort');
+                renderDiaryEntries();
+            });
+        });
+
+        // 保存日记
+        function saveDiaries() {
+            localStorage.setItem('diaries', JSON.stringify(diaries));
+        }
+
+        // 渲染日记条目
+        function renderDiaryEntries() {
+            diaryEntries.innerHTML = '';
+            
+            if (diaries.length === 0) {
+                diaryEntries.innerHTML = '<p style="text-align:center; padding:30px; color:var(--gray);">暂无日记记录，开始记录您的每日心情吧！</p>';
+                return;
+            }
+            
+            // 排序日记
+            let sortedDiaries = [...diaries];
+            if (sortOrder === 'newest') {
+                sortedDiaries.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else {
+                sortedDiaries.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+            
+            sortedDiaries.forEach(diary => {
+                const diaryElement = document.createElement('div');
+                diaryElement.className = 'diary-entry';
+                
+                // 根据心情设置样式
+                let moodIcon = '';
+                let moodText = '';
+                let moodColor = '';
+                
+                switch(diary.mood) {
+                    case 'excited':
+                        moodIcon = '<i class="fas fa-grin-hearts"></i>';
+                        moodText = '兴奋';
+                        moodColor = '#ec4899';
+                        break;
+                    case 'happy':
+                        moodIcon = '<i class="fas fa-laugh-beam"></i>';
+                        moodText = '开心';
+                        moodColor = '#f59e0b';
+                        break;
+                    case 'satisfied':
+                        moodIcon = '<i class="fas fa-smile"></i>';
+                        moodText = '满意';
+                        moodColor = '#10b981';
+                        break;
+                    case 'calm':
+                        moodIcon = '<i class="fas fa-meh-blank"></i>';
+                        moodText = '平静';
+                        moodColor = '#3b82f6';
+                        break;
+                    case 'tired':
+                        moodIcon = '<i class="fas fa-tired"></i>';
+                        moodText = '疲惫';
+                        moodColor = '#64748b';
+                        break;
+                    case 'sad':
+                        moodIcon = '<i class="fas fa-sad-tear"></i>';
+                        moodText = '难过';
+                        moodColor = '#6366f1';
+                        break;
+                    case 'anxious':
+                        moodIcon = '<i class="fas fa-flushed"></i>';
+                        moodText = '焦虑';
+                        moodColor = '#f43f5e';
+                        break;
+                    case 'relaxed':
+                        moodIcon = '<i class="fas fa-pagelines"></i>';
+                        moodText = '放松';
+                        moodColor = '#10b981';
+                        break;
+                }
+                
+                // 格式化日期
+                const date = new Date(diary.date);
+                const formattedDate = date.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                
+                diaryElement.innerHTML = `
+                    <div class="diary-actions">
+                        <button class="diary-btn edit" data-id="${diary.id}"><i class="fas fa-edit"></i></button>
+                        <button class="diary-btn delete" data-id="${diary.id}"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="diary-date">${formattedDate}</div>
+                    <div class="diary-mood" style="background-color: ${moodColor}20; color: ${moodColor};">
+                        ${moodIcon} ${moodText}
+                    </div>
+                    <div class="diary-content">${diary.content || '无记录内容'}</div>
+                    <div class="diary-completion">
+                        <i class="fas fa-tasks"></i> 任务完成度:
+                        <div class="completion-bar" style="margin: 0 10px;">
+                            <div class="completion-fill" style="width: ${diary.completion}%;"></div>
+                        </div>
+                        ${diary.completion}%
+                    </div>
+                `;
+                
+                diaryEntries.appendChild(diaryElement);
+            });
+            
+            // 添加日记编辑和删除事件
+            document.querySelectorAll('.diary-btn.edit').forEach(button => {
+                button.addEventListener('click', editDiary);
+            });
+            
+            document.querySelectorAll('.diary-btn.delete').forEach(button => {
+                button.addEventListener('click', deleteDiary);
+            });
+        }
+
+        // 编辑日记
+        function editDiary(e) {
+            const diaryId = parseInt(e.target.closest('.diary-btn.edit').getAttribute('data-id'));
+            const diary = diaries.find(d => d.id === diaryId);
+            
+            if (!diary) return;
+            
+            // 填充表单
+            document.getElementById('diaryDate').value = diary.date;
+            document.getElementById('moodDiaryText').value = diary.content || '';
+            document.getElementById('completionRate').value = diary.completion;
+            completionValue.textContent = `${diary.completion}%`;
+            
+            // 选择心情
+            moodOptions.forEach(opt => opt.classList.remove('selected'));
+            const selectedMood = Array.from(moodOptions).find(
+                opt => opt.getAttribute('data-mood') === diary.mood
+            );
+            if (selectedMood) {
+                selectedMood.classList.add('selected');
+                selectedMoodInput.value = diary.mood;
+            }
+            
+            // 滚动到日记表单
+            document.getElementById('moodDiaryForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // 删除日记
+        function deleteDiary(e) {
+            const diaryId = parseInt(e.target.closest('.diary-btn.delete').getAttribute('data-id'));
+            
+            if (confirm('确定要删除这篇日记吗？')) {
+                diaries = diaries.filter(d => d.id !== diaryId);
+                saveDiaries();
+                renderDiaryEntries();
+                
+                showNotification('成功', '日记已删除');
+            }
+        }
+
+        // 显示通知
+        function showNotification(title, message) {
+            notificationTitle.innerHTML = `<i class="fas fa-info-circle"></i> ${title}`;
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            // 5秒后自动关闭
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // 关闭通知
+        notificationClose.addEventListener('click', () => {
+            notification.classList.remove('show');
+        });
+
+        // 初始化
+        function init() {
+            // 设置日记默认日期为今天
+            const now = new Date();
+            document.getElementById('diaryDate').value = now.toISOString().split('T')[0];
+            
+            renderDiaryEntries();
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>
+    
