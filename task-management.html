@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --transition: all 0.3s ease;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f0f4f8;
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 25px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 {
+            color: var(--dark);
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .task-form-section, .task-list-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        h2 i {
+            color: var(--primary);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .stat-number {
+            font-size: 1.6rem;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        label i {
+            color: var(--primary);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        button {
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        }
+
+        /* 优先级选择器 */
+        .priority-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .priority-option {
+            padding: 15px 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .priority-option.selected {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+
+        .priority-option.urgent-important {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        .priority-option.urgent-not-important {
+            background-color: rgba(245, 158, 11, 0.1);
+        }
+
+        .priority-option.not-urgent-important {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .priority-option.not-urgent-not-important {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .priority-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .priority-description {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        /* 图片上传 */
+        .image-upload {
+            margin-top: 10px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary);
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: var(--gray);
+        }
+
+        #imageInput, #editImageInput {
+            display: none;
+        }
+
+        .task-images {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .task-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 2px solid #f1f5f9;
+            cursor: pointer;
+        }
+
+        .image-container {
+            position: relative;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background-color: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* 任务列表 */
+        .task-item {
+            background: white;
+            border-left: 4px solid;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: var(--transition);
+        }
+
+        .task-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* 优先级颜色区分 */
+        .priority-urgent-important {
+            border-left-color: var(--danger);
+            background-color: #fef2f2;
+        }
+        .priority-urgent-not-important {
+            border-left-color: var(--warning);
+            background-color: #fff7ed;
+        }
+        .priority-not-urgent-important {
+            border-left-color: var(--info);
+            background-color: #eff6ff;
+        }
+        .priority-not-urgent-not-important {
+            border-left-color: var(--success);
+            background-color: #f0fdf4;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .task-dates {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin: 12px 0;
+            padding: 10px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .task-details {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-complete {
+            background: linear-gradient(90deg, var(--success), #059669);
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(90deg, var(--warning), #d97706);
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .btn-delete {
+            background: linear-gradient(90deg, var(--danger), #dc2626);
+            flex: 1;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .completed {
+            opacity: 0.7;
+        }
+
+        .completed .task-title {
+            text-decoration: line-through;
+            color: var(--gray);
+        }
+
+        /* 编辑表单样式 */
+        #editTaskContainer {
+            display: none;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .close-form {
+            background: #f1f5f9;
+            color: var(--dark);
+        }
+
+        /* 图片查看器 */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .image-viewer.show {
+            display: flex;
+        }
+
+        .viewer-image {
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 8px;
+        }
+
+        .close-viewer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            border-left: 4px solid var(--primary);
+            padding: 12px 18px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--dark);
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .no-tasks {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--gray);
+        }
+
+        .no-tasks i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            .priority-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .task-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <i class="fas fa-tasks" style="font-size: 1.8rem; color: var(--primary);"></i>
+                <h1>任务管理</h1>
+            </div>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> 返回主页
+            </a>
+        </header>
+
+        <div class="main-content">
+            <section class="task-form-section">
+                <div id="addTaskContainer">
+                    <h2><i class="fas fa-plus-circle"></i> 添加新任务</h2>
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label for="taskTitle"><i class="fas fa-heading"></i> 任务名称</label>
+                            <input type="text" id="taskTitle" required placeholder="例如：完成数学作业">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskDescription"><i class="fas fa-align-left"></i> 任务描述</label>
+                            <textarea id="taskDescription" rows="3" placeholder="详细描述任务内容、要求等..."></textarea>
+                            
+                            <label style="margin-top: 20px;"><i class="fas fa-image"></i> 任务图片（可选）</label>
+                            <div class="image-upload" id="imageUpload">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">点击上传图片</div>
+                                <input type="file" id="imageInput" accept="image/*" multiple>
+                            </div>
+                            
+                            <div class="task-images" id="taskImages">
+                                <!-- 上传的图片将显示在这里 -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> 开始时间</label>
+                            <input type="datetime-local" id="taskStartDateTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> 截止时间</label>
+                            <input type="datetime-local" id="taskDueDateTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-circle"></i> 优先级</label>
+                            <div class="priority-selector">
+                                <div class="priority-option urgent-important" data-priority="urgent-important">
+                                    <div class="priority-label">紧急且重要</div>
+                                    <div class="priority-description">需要立即完成</div>
+                                </div>
+                                <div class="priority-option urgent-not-important" data-priority="urgent-not-important">
+                                    <div class="priority-label">紧急但不重要</div>
+                                    <div class="priority-description">可以授权他人</div>
+                                </div>
+                                <div class="priority-option not-urgent-important" data-priority="not-urgent-important">
+                                    <div class="priority-label">不紧急但重要</div>
+                                    <div class="priority-description">需要计划完成</div>
+                                </div>
+                                <div class="priority-option not-urgent-not-important" data-priority="not-urgent-not-important">
+                                    <div class="priority-label">不紧急也不重要</div>
+                                    <div class="priority-description">可以推迟或取消</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="taskPriority" value="urgent-important">
+                        </div>
+                        
+                        <button type="submit"><i class="fas fa-save"></i> 保存任务</button>
+                    </form>
+                </div>
+                
+                <div id="editTaskContainer">
+                    <h2><i class="fas fa-edit"></i> 编辑任务</h2>
+                    <form id="editTaskForm">
+                        <input type="hidden" id="editTaskId">
+                        
+                        <div class="form-group">
+                            <label for="editTaskTitle"><i class="fas fa-heading"></i> 任务名称</label>
+                            <input type="text" id="editTaskTitle" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editTaskDescription"><i class="fas fa-align-left"></i> 任务描述</label>
+                            <textarea id="editTaskDescription" rows="3"></textarea>
+                            
+                            <label style="margin-top: 20px;"><i class="fas fa-image"></i> 任务图片（可选）</label>
+                            <div class="image-upload" id="editImageUpload">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="upload-text">点击上传图片</div>
+                                <input type="file" id="editImageInput" accept="image/*" multiple>
+                            </div>
+                            
+                            <div class="task-images" id="editTaskImages">
+                                <!-- 上传的图片将显示在这里 -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> 开始时间</label>
+                            <input type="datetime-local" id="editTaskStartDateTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> 截止时间</label>
+                            <input type="datetime-local" id="editTaskDueDateTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-circle"></i> 优先级</label>
+                            <div class="priority-selector" id="editPrioritySelector">
+                                <div class="priority-option urgent-important" data-priority="urgent-important">
+                                    <div class="priority-label">紧急且重要</div>
+                                    <div class="priority-description">需要立即完成</div>
+                                </div>
+                                <div class="priority-option urgent-not-important" data-priority="urgent-not-important">
+                                    <div class="priority-label">紧急但不重要</div>
+                                    <div class="priority-description">可以授权他人</div>
+                                </div>
+                                <div class="priority-option not-urgent-important" data-priority="not-urgent-important">
+                                    <div class="priority-label">不紧急但重要</div>
+                                    <div class="priority-description">需要计划完成</div>
+                                </div>
+                                <div class="priority-option not-urgent-not-important" data-priority="not-urgent-not-important">
+                                    <div class="priority-label">不紧急也不重要</div>
+                                    <div class="priority-description">可以推迟或取消</div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="editTaskPriority" value="urgent-important">
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit"><i class="fas fa-save"></i> 保存修改</button>
+                            <button type="button" class="close-form" id="cancelEdit"><i class="fas fa-times"></i> 取消</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="task-list-section">
+                <h2><i class="fas fa-list-check"></i> 任务列表</h2>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalTasks">0</div>
+                        <div class="stat-label">总任务数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="pendingTasks">0</div>
+                        <div class="stat-label">待完成</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="completedTasks">0</div>
+                        <div class="stat-label">已完成</div>
+                    </div>
+                </div>
+                
+                <div id="taskList">
+                    <div class="no-tasks">
+                        <i class="fas fa-tasks"></i>
+                        <p>暂无任务</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">可以在左侧添加新任务</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- 图片查看器 -->
+    <div class="image-viewer" id="imageViewer">
+        <button class="close-viewer" id="closeViewer"><i class="fas fa-times"></i></button>
+        <img src="" alt="任务图片" class="viewer-image" id="viewerImage">
+    </div>
+
+    <!-- 通知组件 -->
+    <div class="notification" id="notification">
+        <div class="notification-title" id="notificationTitle"></div>
+        <div class="notification-message" id="notificationMessage"></div>
+    </div>
+
+    <script>
+        // 初始化任务数据
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let uploadedImages = [];
+        let editImages = [];
+        let currentEditTaskId = null;
+
+        // DOM元素
+        const taskForm = document.getElementById('taskForm');
+        const editTaskForm = document.getElementById('editTaskForm');
+        const cancelEditBtn = document.getElementById('cancelEdit');
+        const taskList = document.getElementById('taskList');
+        const addTaskContainer = document.getElementById('addTaskContainer');
+        const editTaskContainer = document.getElementById('editTaskContainer');
+        const totalTasksEl = document.getElementById('totalTasks');
+        const pendingTasksEl = document.getElementById('pendingTasks');
+        const completedTasksEl = document.getElementById('completedTasks');
+        const priorityOptions = document.querySelectorAll('.priority-option');
+        const taskPriorityInput = document.getElementById('taskPriority');
+        const editPriorityOptions = document.querySelectorAll('#editPrioritySelector .priority-option');
+        const editTaskPriorityInput = document.getElementById('editTaskPriority');
+        const imageUpload = document.getElementById('imageUpload');
+        const imageInput = document.getElementById('imageInput');
+        const taskImages = document.getElementById('taskImages');
+        const editImageUpload = document.getElementById('editImageUpload');
+        const editImageInput = document.getElementById('editImageInput');
+        const editTaskImages = document.getElementById('editTaskImages');
+        const notification = document.getElementById('notification');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const imageViewer = document.getElementById('imageViewer');
+        const viewerImage = document.getElementById('viewerImage');
+        const closeViewer = document.getElementById('closeViewer');
+
+        // 初始化优先级选择功能
+        function initPrioritySelection() {
+            // 为添加任务的优先级选项添加事件
+            priorityOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    priorityOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    taskPriorityInput.value = option.getAttribute('data-priority');
+                });
+            });
+
+            // 为编辑任务的优先级选项添加事件
+            editPriorityOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    editPriorityOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    editTaskPriorityInput.value = option.getAttribute('data-priority');
+                });
+            });
+
+            // 默认选中第一个优先级
+            priorityOptions[0].classList.add('selected');
+            editPriorityOptions[0].classList.add('selected');
+        }
+
+        // 图片上传处理
+        function initImageUpload() {
+            imageUpload.addEventListener('click', () => imageInput.click());
+            editImageUpload.addEventListener('click', () => editImageInput.click());
+
+            imageInput.addEventListener('change', () => {
+                handleImageFiles(imageInput.files, false);
+            });
+
+            editImageInput.addEventListener('change', () => {
+                handleImageFiles(editImageInput.files, true);
+            });
+        }
+
+        // 处理上传的图片
+        function handleImageFiles(files, isEdit) {
+            const targetArray = isEdit ? editImages : uploadedImages;
+            const targetContainer = isEdit ? editTaskImages : taskImages;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.match('image.*')) continue;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageUrl = e.target.result;
+                    targetArray.push(imageUrl);
+                    displayImage(imageUrl, targetContainer, isEdit, targetArray);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 显示上传的图片
+        function displayImage(imageUrl, container, isEdit, array) {
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'image-container';
+            
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.className = 'task-image';
+            img.alt = '任务相关图片';
+            img.addEventListener('click', () => {
+                viewerImage.src = imageUrl;
+                imageViewer.classList.add('show');
+            });
+            
+            const removeBtn = document.createElement('div');
+            removeBtn.className = 'remove-image';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = array.indexOf(imageUrl);
+                if (index > -1) {
+                    array.splice(index, 1);
+                }
+                imageContainer.remove();
+            });
+            
+            imageContainer.appendChild(img);
+            imageContainer.appendChild(removeBtn);
+            container.appendChild(imageContainer);
+        }
+
+        // 图片查看器控制
+        function initImageViewer() {
+            closeViewer.addEventListener('click', () => {
+                imageViewer.classList.remove('show');
+            });
+
+            imageViewer.addEventListener('click', (e) => {
+                if (e.target === imageViewer) {
+                    imageViewer.classList.remove('show');
+                }
+            });
+        }
+
+        // 任务表单提交处理
+        function initTaskForm() {
+            // 设置默认日期时间
+            const now = new Date();
+            const dateTimeString = now.toISOString().slice(0, 16);
+            document.getElementById('taskStartDateTime').value = dateTimeString;
+            
+            // 设置默认截止时间（1小时后）
+            const dueTime = new Date(now);
+            dueTime.setHours(now.getHours() + 1);
+            document.getElementById('taskDueDateTime').value = dueTime.toISOString().slice(0, 16);
+
+            taskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const title = document.getElementById('taskTitle').value;
+                const description = document.getElementById('taskDescription').value;
+                const startDateTime = document.getElementById('taskStartDateTime').value;
+                const dueDateTime = document.getElementById('taskDueDateTime').value;
+                const priority = document.getElementById('taskPriority').value;
+                
+                // 验证日期
+                const startDate = new Date(startDateTime);
+                const dueDate = new Date(dueDateTime);
+                
+                if (startDate >= dueDate) {
+                    showNotification('错误', '截止时间必须晚于开始时间');
+                    return;
+                }
+                
+                const newTask = {
+                    id: Date.now(),
+                    title: title,
+                    description: description,
+                    startDateTime: startDateTime,
+                    dueDateTime: dueDateTime,
+                    priority: priority,
+                    completed: false,
+                    images: [...uploadedImages]
+                };
+                
+                // 添加任务并刷新界面
+                tasks.push(newTask);
+                saveTasks();
+                renderTaskList();
+                updateStats();
+                
+                // 重置表单
+                taskForm.reset();
+                uploadedImages = [];
+                taskImages.innerHTML = '';
+                document.getElementById('taskStartDateTime').value = dateTimeString;
+                document.getElementById('taskDueDateTime').value = dueTime.toISOString().slice(0, 16);
+                priorityOptions.forEach(opt => opt.classList.remove('selected'));
+                priorityOptions[0].classList.add('selected');
+                taskPriorityInput.value = 'urgent-important';
+                
+                showNotification('成功', '任务已添加');
+            });
+        }
+
+        // 编辑任务表单处理
+        function initEditForm() {
+            editTaskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!currentEditTaskId) return;
+                
+                const task = tasks.find(t => t.id === currentEditTaskId);
+                if (!task) return;
+                
+                task.title = document.getElementById('editTaskTitle').value;
+                task.description = document.getElementById('editTaskDescription').value;
+                task.startDateTime = document.getElementById('editTaskStartDateTime').value;
+                task.dueDateTime = document.getElementById('editTaskDueDateTime').value;
+                task.priority = document.getElementById('editTaskPriority').value;
+                task.images = [...editImages];
+                
+                saveTasks();
+                renderTaskList();
+                updateStats();
+                
+                // 重置编辑表单
+                cancelEdit();
+                
+                showNotification('成功', '任务已更新');
+            });
+
+            cancelEditBtn.addEventListener('click', cancelEdit);
+        }
+
+        // 取消编辑
+        function cancelEdit() {
+            editTaskContainer.style.display = 'none';
+            addTaskContainer.style.display = 'block';
+            
+            // 重置编辑表单
+            editTaskForm.reset();
+            editImages = [];
+            editTaskImages.innerHTML = '';
+            currentEditTaskId = null;
+        }
+
+        // 保存任务到本地存储
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.completed).length;
+            const pending = total - completed;
+            
+            totalTasksEl.textContent = total;
+            completedTasksEl.textContent = completed;
+            pendingTasksEl.textContent = pending;
+        }
+
+        // 渲染任务列表
+        function renderTaskList() {
+            // 清空列表
+            taskList.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="no-tasks">
+                        <i class="fas fa-tasks"></i>
+                        <p>暂无任务</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">可以在左侧添加新任务</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按截止日期排序
+            const sortedTasks = [...tasks].sort((a, b) => {
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                return new Date(a.dueDateTime) - new Date(b.dueDateTime);
+            });
+            
+            // 创建任务项
+            sortedTasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item ${task.completed ? 'completed' : ''} priority-${task.priority}`;
+                
+                // 格式化日期
+                const startDate = new Date(task.startDateTime);
+                const dueDate = new Date(task.dueDateTime);
+                const formattedStart = startDate.toLocaleString('zh-CN');
+                const formattedDue = dueDate.toLocaleString('zh-CN');
+                
+                // 优先级文本
+                let priorityText = '';
+                switch(task.priority) {
+                    case 'urgent-important': priorityText = '紧急且重要'; break;
+                    case 'urgent-not-important': priorityText = '紧急但不重要'; break;
+                    case 'not-urgent-important': priorityText = '不紧急但重要'; break;
+                    case 'not-urgent-not-important': priorityText = '不紧急也不重要'; break;
+                }
+                
+                // 构建图片HTML
+                let imagesHtml = '';
+                if (task.images && task.images.length > 0) {
+                    imagesHtml = '<div class="task-images">';
+                    task.images.forEach(imgUrl => {
+                        imagesHtml += `<img src="${imgUrl}" class="task-image" alt="任务图片" onclick="document.getElementById('viewerImage').src='${imgUrl}'; document.getElementById('imageViewer').classList.add('show')">`;
+                    });
+                    imagesHtml += '</div>';
+                }
+                
+                taskElement.innerHTML = `
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-details">${task.description || '无描述'}</div>
+                    ${imagesHtml}
+                    <div class="task-dates">
+                        <div><i class="fas fa-play"></i> 开始: ${formattedStart}</div>
+                        <div><i class="fas fa-stop"></i> 截止: ${formattedDue}</div>
+                    </div>
+                    <div class="task-details">
+                        <i class="fas fa-flag"></i> 优先级: ${priorityText}
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-complete" data-id="${task.id}">
+                            <i class="fas fa-${task.completed ? 'redo' : 'check'}"></i> 
+                            ${task.completed ? '重新打开' : '完成'}
+                        </button>
+                        <button class="btn-edit" data-id="${task.id}">
+                            <i class="fas fa-edit"></i> 编辑
+                        </button>
+                        <button class="btn-delete" data-id="${task.id}">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    </div>
+                `;
+                
+                taskList.appendChild(taskElement);
+            });
+            
+            // 添加事件监听
+            document.querySelectorAll('.btn-complete').forEach(button => {
+                button.addEventListener('click', toggleTaskCompletion);
+            });
+            
+            document.querySelectorAll('.btn-edit').forEach(button => {
+                button.addEventListener('click', editTask);
+            });
+            
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', deleteTask);
+            });
+        }
+
+        // 切换任务完成状态
+        function toggleTaskCompletion(e) {
+            const taskId = parseInt(e.target.closest('.btn-complete').getAttribute('data-id'));
+            const task = tasks.find(t => t.id === taskId);
+            
+            if (task) {
+                task.completed = !task.completed;
+                saveTasks();
+                renderTaskList();
+                updateStats();
+                showNotification('成功', task.completed ? '任务已标记为完成' : '任务已重新打开');
+            }
+        }
+
+        // 编辑任务
+        function editTask(e) {
+            const taskId = parseInt(e.target.closest('.btn-edit').getAttribute('data-id'));
+            const task = tasks.find(t => t.id === taskId);
+            
+            if (!task) return;
+            
+            currentEditTaskId = taskId;
+            
+            // 显示编辑表单
+            addTaskContainer.style.display = 'none';
+            editTaskContainer.style.display = 'block';
+            
+            // 填充表单数据
+            document.getElementById('editTaskId').value = taskId;
+            document.getElementById('editTaskTitle').value = task.title;
+            document.getElementById('editTaskDescription').value = task.description || '';
+            document.getElementById('editTaskStartDateTime').value = task.startDateTime;
+            document.getElementById('editTaskDueDateTime').value = task.dueDateTime;
+            
+            // 设置优先级
+            editPriorityOptions.forEach(opt => opt.classList.remove('selected'));
+            const selectedPriority = Array.from(editPriorityOptions).find(
+                opt => opt.getAttribute('data-priority') === task.priority
+            );
+            if (selectedPriority) {
+                selectedPriority.classList.add('selected');
+                editTaskPriorityInput.value = task.priority;
+            }
+            
+            // 显示图片
+            editImages = [...task.images];
+            editTaskImages.innerHTML = '';
+            task.images.forEach(imgUrl => {
+                displayImage(imgUrl, editTaskImages, true, editImages);
+            });
+        }
+
+        // 删除任务
+        function deleteTask(e) {
+            const taskId = parseInt(e.target.closest('.btn-delete').getAttribute('data-id'));
+            
+            if (confirm('确定要删除这个任务吗？')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                saveTasks();
+                renderTaskList();
+                updateStats();
+                showNotification('成功', '任务已删除');
+            }
+        }
+
+        // 显示通知
+        function showNotification(title, message) {
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 初始化
+        function init() {
+            initPrioritySelection();
+            initImageUpload();
+            initImageViewer();
+            initTaskForm();
+            initEditForm();
+            renderTaskList();
+            updateStats();
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>
+    
+    

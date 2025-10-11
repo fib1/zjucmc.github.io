@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIB的任务处理机</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-light: #8b5cf6;
+            --secondary: #3b82f6;
+            --accent1: #ec4899;
+            --accent2: #10b981;
+            --accent3: #f59e0b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 60px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent1));
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+        }
+
+        .tagline {
+            color: #64748b;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 25px;
+            text-decoration: none;
+            color: var(--dark);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            transition: var(--transition);
+        }
+
+        .feature-card.task-management::before {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .feature-card.daily-schedule::before {
+            background: linear-gradient(90deg, var(--accent2), #059669);
+        }
+
+        .feature-card.task-calendar::before {
+            background: linear-gradient(90deg, var(--accent3), #d97706);
+        }
+
+        .feature-card.mood-diary::before {
+            background: linear-gradient(90deg, var(--accent1), #be185d);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            color: white;
+            transition: var(--transition);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .task-management .feature-icon {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .daily-schedule .feature-icon {
+            background: linear-gradient(135deg, var(--accent2), #059669);
+        }
+
+        .task-calendar .feature-icon {
+            background: linear-gradient(135deg, var(--accent3), #d97706);
+        }
+
+        .mood-diary .feature-icon {
+            background: linear-gradient(135deg, var(--accent1), #be185d);
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover .feature-title {
+            color: var(--primary);
+        }
+
+        .feature-desc {
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            flex-grow: 1;
+        }
+
+        .feature-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .feature-card:hover .feature-link {
+            color: var(--secondary);
+        }
+
+        .feature-link i {
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-link i {
+            transform: translateX(5px);
+        }
+
+        footer {
+            margin-top: 80px;
+            color: #64748b;
+            font-size: 0.9rem;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .tagline {
+                font-size: 1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .feature-card {
+                padding: 25px 20px;
+            }
+            
+            .feature-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FIB的任务处理机</h1>
+            <p class="tagline">记录生活点滴，让每一天都更有意义</p>
+        </header>
+
+        <div class="features-grid">
+            <a href="task-management.html" class="feature-card task-management">
+                <div class="feature-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h2 class="feature-title">任务管理</h2>
+                <p class="feature-desc">创建、编辑和跟踪你的任务，设置优先级和截止时间，上传相关图片</p>
+                <span class="feature-link">
+                    进入管理 <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+
+            <a href="daily-schedule.html" class="feature-card daily-schedule">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h2 class="feature-title">当日时间表</h2>
+                <p class="feature-desc">查看当天所有任务的时间安排，清晰掌握日程节奏</p>
+                <span class="feature-link">
+                    查看日程 <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+
+            <a href="task-calendar.html" class="feature-card task-calendar">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h2 class="feature-title">任务日历</h2>
+                <p class="feature-desc">在日历视图中查看所有任务分布，宏观把握时间规划</p>
+                <span class="feature-link">
+                    查看日历 <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+
+            <a href="mood-diary.html" class="feature-card mood-diary">
+                <div class="feature-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <h2 class="feature-title">心情日记</h2>
+                <p class="feature-desc">记录每日心情和任务完成情况，留下生活印记</p>
+                <span class="feature-link">
+                    记录日记 <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+        </div>
+
+        <footer>
+            <p>高效任务管理，从这里开始 © 2025</p>
+        </footer>
+    </div>
+</body>
+</html>
+    
