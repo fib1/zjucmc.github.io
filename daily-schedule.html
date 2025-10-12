@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>当日任务时间表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* 保持原有样式不变 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --primary-light: #34d399;
+            --primary-ultralight: #dcfce7;
+            --secondary: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --completed: #94a3b8; /* 统一的已完成任务颜色 */
+            --completed-bg: #f1f5f9; /* 已完成任务背景色 */
+            --light-gray: #f1f5f9;
+            --border: #e2e8f0;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: #f0f4f8;
+            background-image: 
+                radial-gradient(at 40% 20%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px 25px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-top-left-radius: var(--border-radius);
+            border-top-right-radius: var(--border-radius);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h1 {
+            color: var(--dark);
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            background-color: var(--primary-ultralight);
+            transform: translateY(-2px);
+        }
+
+        .daily-schedule-section {
+            background: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .daily-schedule-section:hover {
+            box-shadow: var(--shadow);
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: var(--dark);
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        h2 i {
+            color: var(--primary);
+        }
+
+        .daily-schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .schedule-date {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background-color: var(--primary-ultralight);
+            border-radius: 8px;
+        }
+
+        .schedule-date i {
+            color: var(--primary);
+        }
+
+        .schedule-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .schedule-nav button {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .schedule-nav button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+            background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+        }
+
+        .daily-schedule {
+            margin-top: 20px;
+            position: relative;
+            overflow: auto;
+            min-height: 500px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .time-labels {
+            display: flex;
+            height: 50px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .time-label {
+            flex: 1;
+            text-align: center;
+            padding-top: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+            border-right: 1px dashed var(--border);
+            font-weight: 500;
+        }
+
+        .time-label:nth-child(odd) {
+            background-color: var(--light-gray);
+        }
+
+        .schedule-rows {
+            position: relative;
+        }
+
+        .schedule-row {
+            display: flex;
+            height: 60px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .schedule-row:nth-child(odd) {
+            background-color: var(--light-gray);
+        }
+
+        .schedule-cell {
+            flex: 1;
+            border-right: 1px dashed var(--border);
+        }
+
+        .schedule-task {
+            position: absolute;
+            height: 50px;
+            margin-top: 5px;
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: white;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: var(--transition);
+            z-index: 5;
+        }
+
+        .schedule-task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+
+        /* 优先级颜色区分 */
+        .priority-urgent-important {
+            background: linear-gradient(90deg, var(--danger), #dc2626);
+        }
+        .priority-urgent-not-important {
+            background: linear-gradient(90deg, var(--warning), #d97706);
+        }
+        .priority-not-urgent-important {
+            background: linear-gradient(90deg, var(--info), #2563eb);
+        }
+        .priority-not-urgent-not-important {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        /* 已完成任务样式 - 统一颜色且淡化 */
+        .schedule-task.completed {
+            background: linear-gradient(90deg, var(--completed), var(--gray));
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+
+        /* 提醒通知样式 */
+        .reminder-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            border-left: 4px solid var(--warning);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 500px;
+            width: 90%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .reminder-notification.show {
+            opacity: 1;
+            pointer-events: all;
+            top: 30px;
+        }
+
+        .reminder-icon {
+            font-size: 1.8rem;
+            color: var(--warning);
+        }
+
+        .reminder-content {
+            flex: 1;
+        }
+
+        .reminder-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+
+        .reminder-message {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+
+        .reminder-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .reminder-btn {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .reminder-btn-primary {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .reminder-btn-secondary {
+            background-color: #f1f5f9;
+            color: var(--dark);
+        }
+
+        /* 烟花庆祝效果 */
+        .fireworks {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .firework {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .firework-particle {
+            position: absolute;
+            width: 3px; /* 粒子稍小以适应更多数量 */
+            height: 3px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .celebration-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--success);
+            text-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+            z-index: 10000;
+            opacity: 0;
+        }
+
+        .celebration-message.show {
+            animation: pop-in 0.5s forwards, pop-out 0.5s 2s forwards;
+        }
+
+        @keyframes pop-in {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            90% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        @keyframes pop-out {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        }
+
+        .no-tasks {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .no-tasks i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            .daily-schedule-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .schedule-date {
+                font-size: 1rem;
+                width: 100%;
+            }
+            
+            .schedule-nav button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            
+            .time-label span {
+                display: none;
+            }
+            
+            .time-label::after {
+                content: attr(data-hour);
+            }
+            
+            .daily-schedule {
+                min-height: 400px;
+            }
+
+            .celebration-message {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <i class="fas fa-clock" style="font-size: 1.8rem; color: var(--primary);"></i>
+                <h1>当日任务时间表</h1>
+            </div>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> 返回主页
+            </a>
+        </header>
+
+        <section class="daily-schedule-section">
+            <h2><i class="fas fa-calendar-day"></i> 任务时间安排</h2>
+            <div class="daily-schedule-header">
+                <div class="schedule-date" id="scheduleDate"></div>
+                <div class="schedule-nav">
+                    <button id="prevDay"><i class="fas fa-chevron-left"></i> 前一天</button>
+                    <button id="nextDay">后一天 <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="daily-schedule" id="dailySchedule">
+                <div class="time-labels" id="timeLabels">
+                    <!-- 时间标签将动态生成 -->
+                </div>
+                <div class="schedule-rows" id="scheduleRows">
+                    <!-- 日程行将动态生成 -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 提醒通知组件 -->
+    <div class="reminder-notification" id="reminderNotification">
+        <div class="reminder-icon">
+            <i class="fas fa-bell"></i>
+        </div>
+        <div class="reminder-content">
+            <div class="reminder-title" id="reminderTitle">任务提醒</div>
+            <div class="reminder-message" id="reminderMessage">任务即将开始</div>
+            <div class="reminder-actions">
+                <button class="reminder-btn reminder-btn-secondary" id="snoozeReminder">稍后提醒</button>
+                <button class="reminder-btn reminder-btn-primary" id="dismissReminder">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 烟花庆祝效果容器 -->
+    <div class="fireworks" id="fireworks">
+        <!-- 烟花元素会动态生成在这里 -->
+    </div>
+    <div class="celebration-message" id="celebrationMessage">任务完成！🎉</div>
+
+    <script>
+        // 任务数据
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let currentScheduleDate = new Date();
+        let reminderTimeout = null; // 用于稍后提醒的计时器
+        const REMINDER_MINUTES = 20; // 提醒时间（任务开始前20分钟）
+        const SNOOZE_MINUTES = 5; // 稍后提醒间隔（5分钟）
+        let fireworkCounter = 0; // 用于跟踪烟花ID，确保唯一性
+
+        // DOM元素
+        const dailySchedule = document.getElementById('dailySchedule');
+        const timeLabels = document.getElementById('timeLabels');
+        const scheduleRows = document.getElementById('scheduleRows');
+        const scheduleDate = document.getElementById('scheduleDate');
+        const prevDayBtn = document.getElementById('prevDay');
+        const nextDayBtn = document.getElementById('nextDay');
+        const reminderNotification = document.getElementById('reminderNotification');
+        const reminderTitle = document.getElementById('reminderTitle');
+        const reminderMessage = document.getElementById('reminderMessage');
+        const snoozeReminderBtn = document.getElementById('snoozeReminder');
+        const dismissReminderBtn = document.getElementById('dismissReminder');
+        const fireworks = document.getElementById('fireworks');
+        const celebrationMessage = document.getElementById('celebrationMessage');
+
+        // 获取本地时区的日期字符串（解决时区偏移导致的日期错误）
+        function getLocalDateString(date) {
+            const localDate = new Date(date);
+            const offset = localDate.getTimezoneOffset() * 60000;
+            const localMidnight = new Date(localDate.getTime() - offset);
+            return localMidnight.toISOString().split('T')[0];
+        }
+
+        // 请求通知权限
+        function requestNotificationPermission() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+        }
+
+        // 显示提醒通知
+        function showReminderNotification(task) {
+            // 只对未完成的任务显示提醒
+            if (task.completed) return;
+            
+            // 显示页面内通知
+            reminderTitle.textContent = `任务即将开始: ${task.title}`;
+            
+            const taskStart = new Date(task.startDateTime);
+            const formattedStart = taskStart.toLocaleTimeString('zh-CN');
+            reminderMessage.textContent = `该任务将于 ${formattedStart} 开始，还有${REMINDER_MINUTES}分钟时间准备。`;
+            
+            reminderNotification.classList.add('show');
+            
+            // 如果浏览器支持，同时显示系统通知
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(`任务提醒: ${task.title}`, {
+                    body: `该任务将于 ${formattedStart} 开始，还有${REMINDER_MINUTES}分钟时间准备。`,
+                    icon: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/bell.svg'
+                });
+            }
+        }
+
+        // 检查是否有需要提醒的任务
+        function checkReminders() {
+            const now = new Date();
+            const fiveMinutesLater = new Date(now.getTime() + 5 * 60000); // 5分钟内
+            
+            tasks.forEach(task => {
+                // 只处理未完成且启用了提醒的任务
+                if (task.completed || !task.reminderEnabled || task.reminderSent) {
+                    return;
+                }
+                
+                const reminderTime = new Date(task.reminderTime);
+                
+                // 检查是否在提醒时间的5分钟范围内
+                if (reminderTime >= now && reminderTime <= fiveMinutesLater) {
+                    // 标记为已发送提醒
+                    task.reminderSent = true;
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    
+                    // 显示提醒
+                    showReminderNotification(task);
+                }
+            });
+        }
+
+        // 创建烟花动画（调整为在顶部爆炸）
+        function createFirework(x, color) {
+            // 为每个烟花创建唯一ID
+            const fireworkId = `firework-${fireworkCounter++}`;
+            
+            // 计算顶部爆炸位置（屏幕上1/4区域）
+            const explosionY = window.innerHeight * 0.25; // 顶部区域
+            
+            // 创建烟花发射体
+            const firework = document.createElement('div');
+            firework.id = fireworkId;
+            firework.className = 'firework';
+            firework.style.backgroundColor = color;
+            firework.style.left = `${x}px`;
+            firework.style.bottom = '0px';
+            firework.style.opacity = '1';
+            
+            fireworks.appendChild(firework);
+            
+            // 发射动画 - 直达顶部爆炸点
+            const launchDuration = 1.2 + Math.random() * 0.8; // 1.2-2秒，确保能到达顶部
+            let launchStartTime = null;
+            
+            function launchAnimation(timestamp) {
+                // 检查烟花元素是否仍然存在
+                const fireworkElement = document.getElementById(fireworkId);
+                if (!fireworkElement) return;
+                
+                if (!launchStartTime) launchStartTime = timestamp;
+                const progress = (timestamp - launchStartTime) / (launchDuration * 1000);
+                
+                if (progress < 1) {
+                    // 直线发射到顶部爆炸点
+                    const distanceToTop = window.innerHeight - explosionY;
+                    const currentPosition = distanceToTop * progress;
+                    fireworkElement.style.bottom = `${currentPosition}px`;
+                    requestAnimationFrame(launchAnimation);
+                } else {
+                    // 到达顶部后爆炸
+                    if (fireworkElement) fireworkElement.remove();
+                    explodeFirework(x, explosionY, color);
+                }
+            }
+            
+            requestAnimationFrame(launchAnimation);
+        }
+
+        // 烟花爆炸效果（增加粒子数量至100-150个）
+        function explodeFirework(x, y, color) {
+            // 每个烟花爆炸生成100-150个粒子
+            const particleCount = 100 + Math.floor(Math.random() * 51);
+            const particles = [];
+            
+            // 创建爆炸粒子，每个粒子有唯一ID
+            for (let i = 0; i < particleCount; i++) {
+                const particleId = `particle-${fireworkCounter++}-${i}`;
+                const particle = document.createElement('div');
+                particle.id = particleId;
+                particle.className = 'firework-particle';
+                
+                // 随机粒子颜色（基于主色调的变体）
+                const hue = color.startsWith('#') ? parseInt(color.slice(1), 16) : getColorValue(color);
+                const randomHue = Math.floor(Math.random() * 40) - 20; // 主色调±20度
+                particle.style.backgroundColor = `hsl(${hue + randomHue}, 85%, 65%)`;
+                
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.opacity = '1';
+                
+                fireworks.appendChild(particle);
+                particles.push({element: particle, id: particleId});
+            }
+            
+            // 爆炸动画
+            const explodeDuration = 2 + Math.random() * 1; // 2-3秒，更长的动画时间以展示更多粒子
+            let explodeStartTime = null;
+            
+            function explodeAnimation(timestamp) {
+                if (!explodeStartTime) explodeStartTime = timestamp;
+                const progress = (timestamp - explodeStartTime) / (explodeDuration * 1000);
+                
+                if (progress < 1) {
+                    particles.forEach((particleObj, index) => {
+                        // 检查粒子是否仍然存在
+                        const particle = document.getElementById(particleObj.id);
+                        if (!particle) return;
+                        
+                        // 每个粒子随机方向和速度
+                        const angle = (index / particles.length) * Math.PI * 2;
+                        const speed = 40 + Math.random() * 80; // 40-120px
+                        const distance = speed * progress;
+                        
+                        // 计算粒子位置
+                        const px = x + Math.cos(angle) * distance;
+                        const py = y + Math.sin(angle) * distance;
+                        
+                        // 应用重力效果（顶部爆炸后下落更明显）
+                        const gravity = progress * progress * 60;
+                        particle.style.left = `${px}px`;
+                        particle.style.top = `${py + gravity}px`;
+                        
+                        // 逐渐淡出
+                        particle.style.opacity = `${1 - progress}`;
+                    });
+                    requestAnimationFrame(explodeAnimation);
+                } else {
+                    // 动画结束，清除粒子
+                    particles.forEach(particleObj => {
+                        const particle = document.getElementById(particleObj.id);
+                        if (particle) particle.remove();
+                    });
+                }
+            }
+            
+            requestAnimationFrame(explodeAnimation);
+        }
+
+        // 辅助函数：获取颜色的HSL值
+        function getColorValue(color) {
+            const colors = {
+                'red': 0,
+                'orange': 30,
+                'yellow': 60,
+                'green': 120,
+                'blue': 240,
+                'indigo': 270,
+                'violet': 300,
+                'pink': 330
+            };
+            return colors[color] || 240; // 默认蓝色
+        }
+
+        // 创建任务完成烟花庆祝效果
+        function createCelebration() {
+            // 显示庆祝文字（如果当前没有显示）
+            if (!celebrationMessage.classList.contains('show')) {
+                celebrationMessage.classList.add('show');
+                
+                // 3秒后自动隐藏文字
+                setTimeout(() => {
+                    celebrationMessage.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 定义多种烟花颜色
+            const fireworkColors = ['#ff3366', '#3366ff', '#33cc99', '#ffcc00', '#cc66ff', '#ff6666', '#66ccff', '#ff99cc'];
+            
+            // 保持10-15个烟花数量
+            const fireworkCount = 10 + Math.floor(Math.random() * 6);
+            for (let i = 0; i < fireworkCount; i++) {
+                // 随机水平位置（覆盖整个屏幕宽度）
+                const x = 30 + Math.random() * (window.innerWidth - 60);
+                
+                // 随机颜色
+                const color = fireworkColors[Math.floor(Math.random() * fireworkColors.length)];
+                
+                // 延迟发射，营造连续效果
+                setTimeout(() => {
+                    createFirework(x, color);
+                }, i * 250); // 每个烟花间隔250ms
+            }
+        }
+
+        // 渲染日程表
+        function renderDailySchedule() {
+            timeLabels.innerHTML = '';
+            scheduleRows.innerHTML = '';
+            
+            // 更新日期显示
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            scheduleDate.innerHTML = `<i class="fas fa-calendar-day"></i> ${currentScheduleDate.toLocaleDateString('zh-CN', options)}`;
+            
+            // 创建时间标签和行（0-23小时）
+            for (let hour = 0; hour < 24; hour++) {
+                // 时间标签
+                const timeLabel = document.createElement('div');
+                timeLabel.className = 'time-label';
+                timeLabel.setAttribute('data-hour', hour);
+                timeLabel.innerHTML = `<span>${hour}:00</span>`;
+                timeLabels.appendChild(timeLabel);
+                
+                // 日程行
+                const scheduleRow = document.createElement('div');
+                scheduleRow.className = 'schedule-row';
+                scheduleRow.dataset.hour = hour;
+                
+                // 为每个小时创建时间段单元格（每15分钟一个单元格）
+                for (let i = 0; i < 4; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'schedule-cell';
+                    scheduleRow.appendChild(cell);
+                }
+                
+                scheduleRows.appendChild(scheduleRow);
+            }
+            
+            // 获取当天所有任务（包括已完成的）
+            const targetDateStr = getLocalDateString(currentScheduleDate);
+            
+            const dayTasks = tasks.filter(task => {
+                const taskStartDateStr = getLocalDateString(new Date(task.startDateTime));
+                const taskDueDateStr = getLocalDateString(new Date(task.dueDateTime));
+                
+                return taskStartDateStr <= targetDateStr && taskDueDateStr >= targetDateStr;
+            });
+            
+            // 按开始时间排序，已完成任务排在后面
+            dayTasks.sort((a, b) => {
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                return new Date(a.startDateTime) - new Date(b.startDateTime);
+            });
+            
+            // 如果没有任务
+            if (dayTasks.length === 0) {
+                const noTasksMsg = document.createElement('div');
+                noTasksMsg.className = 'no-tasks';
+                noTasksMsg.innerHTML = `
+                    <i class="fas fa-calendar-check"></i>
+                    <p>当天没有安排任务</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">可以去任务管理页面添加新任务</p>
+                `;
+                scheduleRows.appendChild(noTasksMsg);
+                return;
+            }
+            
+            // 添加任务到时间表 - 按顺序排列
+            dayTasks.forEach((task, index) => {
+                const startTime = new Date(task.startDateTime);
+                const dueTime = new Date(task.dueDateTime);
+                
+                // 调整跨天任务的显示
+                const taskStartDateStr = getLocalDateString(startTime);
+                const taskDueDateStr = getLocalDateString(dueTime);
+                const targetDate = new Date(currentScheduleDate);
+                
+                const taskStart = new Date(startTime);
+                if (taskStartDateStr < targetDateStr) {
+                    taskStart.setTime(targetDate.getTime());
+                    taskStart.setHours(0, 0, 0, 0);
+                }
+                
+                const taskDue = new Date(dueTime);
+                if (taskDueDateStr > targetDateStr) {
+                    taskDue.setTime(targetDate.getTime());
+                    taskDue.setHours(23, 59, 59, 999);
+                }
+                
+                // 计算位置和宽度（按分钟计算）
+                const startMinutes = taskStart.getHours() * 60 + taskStart.getMinutes();
+                const dueMinutes = taskDue.getHours() * 60 + taskDue.getMinutes();
+                const durationMinutes = dueMinutes - startMinutes;
+                
+                const totalMinutesInDay = 24 * 60;
+                const leftPercent = (startMinutes / totalMinutesInDay) * 100;
+                const widthPercent = (durationMinutes / totalMinutesInDay) * 100;
+                
+                // 创建任务元素 - 关键：使用index确保从上到下依次排列
+                const taskElement = document.createElement('div');
+                // 已完成任务添加completed类以应用特殊样式
+                taskElement.className = `schedule-task priority-${task.priority} ${task.completed ? 'completed' : ''}`;
+                taskElement.textContent = task.title;
+                taskElement.style.left = `${leftPercent}%`;
+                taskElement.style.width = `${widthPercent}%`;
+                taskElement.style.top = `${index * 60}px`; // 按任务顺序依次排列，每行60px
+                
+                // 添加点击完成功能
+                taskElement.addEventListener('click', () => {
+                    const wasCompleted = task.completed;
+                    task.completed = !task.completed;
+                    
+                    // 只有从未完成变为完成时才显示庆祝效果
+                    if (!wasCompleted && task.completed) {
+                        createCelebration();
+                    }
+                    
+                    localStorage.setItem('tasks', JSON.stringify(tasks));
+                    renderDailySchedule(); // 重新渲染，自动重排任务
+                });
+                
+                // 添加任务提示
+                const startHours = taskStart.getHours().toString().padStart(2, '0');
+                const startMins = taskStart.getMinutes().toString().padStart(2, '0');
+                const dueHours = taskDue.getHours().toString().padStart(2, '0');
+                const dueMins = taskDue.getMinutes().toString().padStart(2, '0');
+                
+                // 添加提醒信息和完成状态到提示中
+                let statusText = task.completed ? '（已完成）' : '（未完成）';
+                let reminderText = '';
+                if (task.reminderEnabled && !task.completed) {
+                    const reminderDate = new Date(task.reminderTime);
+                    const formattedReminder = reminderDate.toLocaleTimeString('zh-CN');
+                    reminderText = `\n提醒: ${formattedReminder} (开始前${REMINDER_MINUTES}分钟)`;
+                }
+                
+                taskElement.title = `点击${task.completed ? '标记为未完成' : '标记为完成'}\n${task.title} ${statusText}\n开始: ${startHours}:${startMins}\n截止: ${dueHours}:${dueMins}${reminderText}`;
+                
+                scheduleRows.appendChild(taskElement);
+            });
+        }
+
+        // 日期导航
+        prevDayBtn.addEventListener('click', () => {
+            currentScheduleDate.setDate(currentScheduleDate.getDate() - 1);
+            renderDailySchedule();
+        });
+
+        nextDayBtn.addEventListener('click', () => {
+            currentScheduleDate.setDate(currentScheduleDate.getDate() + 1);
+            renderDailySchedule();
+        });
+
+        // 提醒通知事件处理
+        dismissReminderBtn.addEventListener('click', () => {
+            reminderNotification.classList.remove('show');
+            if (reminderTimeout) {
+                clearTimeout(reminderTimeout);
+                reminderTimeout = null;
+            }
+        });
+
+        snoozeReminderBtn.addEventListener('click', () => {
+            reminderNotification.classList.remove('show');
+            
+            // 5分钟后再次提醒
+            if (reminderTimeout) {
+                clearTimeout(reminderTimeout);
+            }
+            
+            reminderTimeout = setTimeout(() => {
+                reminderNotification.classList.add('show');
+            }, SNOOZE_MINUTES * 60000); // 5分钟
+        });
+
+        // 监听本地存储变化，当任务完成时在当前页面也显示庆祝效果
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'tasks') {
+                const newTasks = JSON.parse(e.newValue || '[]');
+                const oldTasks = JSON.parse(e.oldValue || '[]');
+                
+                // 检查是否有任务从"未完成"变为"完成"
+                for (let i = 0; i < newTasks.length; i++) {
+                    const newTask = newTasks[i];
+                    const oldTask = oldTasks.find(t => t.id === newTask.id);
+                    
+                    if (oldTask && !oldTask.completed && newTask.completed) {
+                        createCelebration();
+                        break;
+                    }
+                }
+                
+                tasks = newTasks;
+                renderDailySchedule();
+                checkReminders();
+            }
+        });
+
+        // 初始化
+        function init() {
+            // 请求通知权限
+            requestNotificationPermission();
+            
+            // 初始渲染
+            renderDailySchedule();
+            
+            // 每分钟检查一次是否有需要提醒的任务
+            checkReminders();
+            setInterval(checkReminders, 60000); // 60秒检查一次
+        }
+
+        // 启动应用
+        init();
+    </script>
+</body>
+</html>
+    
